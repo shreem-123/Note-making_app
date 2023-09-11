@@ -1,0 +1,39 @@
+name: Monitoring for CI/CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline for note-making app"]
+    types:
+      - completed
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Check Workflow Status
+        id: check_status
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const status = github.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.workflow_run.id
+            });
+            return status.data.conclusion;
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send Email Notification
+        if: steps.check_status.outputs.result == 'failure'  # Send notification only if the workflow fails
+        env:
+          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
+          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
+        run: |
+          npm install nodemailer
+          node send-email.js  
