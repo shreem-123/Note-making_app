@@ -1,0 +1,35 @@
+name: CI/CD Pipeline for note-making app
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Lint Code
+        uses: super-linter/super-linter/slim@v5
+        env:
+          VALIDATE_HTML: true
+          VALIDATE_CSS: true
+          VALIDATE_JAVASCRIPT_ES: true
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: .
